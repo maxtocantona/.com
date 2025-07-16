@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Download App</title>
@@ -18,6 +18,11 @@
     }
     h2 {
       margin: 10px 0;
+    }
+    p {
+      color: #333;
+      margin: 10px auto;
+      max-width: 320px;
     }
     .button {
       padding: 12px 25px;
@@ -41,13 +46,17 @@
     const params = new URLSearchParams(window.location.search);
     const appFile = params.get("app");
     const iconURL = params.get("png") || "default-icon.png";
+    const description = params.get("des") || "";
 
     if (appFile && appFile.endsWith(".apk")) {
-      const appName = appFile.replace(".apk", "").replaceAll("_", " ").replace(/\b\w/g, l => l.toUpperCase());
+      const appName = appFile.replace(".apk", "")
+        .replaceAll("_", " ")
+        .replace(/\b\w/g, l => l.toUpperCase());
 
       document.getElementById("content").innerHTML = `
         <img src="${iconURL}" onerror="this.src='default-icon.png'">
         <h2>${appName}</h2>
+        <p>${description}</p>
         <a class="button" href="${appFile}" download>Download APK</a>
       `;
     } else {
