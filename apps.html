@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>My Apps</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: sans-serif;
@@ -52,22 +53,27 @@
   <div id="app-list"></div>
 
   <script>
+    // Encode string to HEX
+    function toHex(str) {
+      return [...str].map(c => c.charCodeAt(0).toString(16)).join('');
+    }
+
     const apps = [
       {
         name: "Age Difference_v.1.4",
-        apk: "Age Difference_v.1.4.apk",
+        apk: "Age_Difference_v.1.4.apk",
         description: "This app helps you calculate age difference between two dates.",
         image: "Age Difference.png"
       },
       {
         name: "Text Generator",
-        apk: "Text Generator.apk",
+        apk: "Text_Generator.apk",
         description: "Repeat any text multiple times by entering input and count.",
         image: "Text Generator.png"
       },
       {
         name: "Photo to PDF",
-        apk: "Photo to PDF.apk",
+        apk: "Photo_to_PDF.apk",
         description: "Convert your images into a single PDF easily and fast.",
         image: "Photo to PDF.png"
       }
@@ -76,10 +82,13 @@
     const container = document.getElementById("app-list");
 
     apps.forEach(app => {
+      const hexDes = toHex(app.description);
+      const href = `dawnload.html?app=${encodeURIComponent(app.apk)}&png=${encodeURIComponent(app.image)}&des=${hexDes}`;
+
       const div = document.createElement("div");
       div.className = "app-card";
       div.innerHTML = `
-        <a href="dawnload.html?app=${encodeURIComponent(app.apk)}&png=${encodeURIComponent(app.image)}&des=${encodeURIComponent(app.description)}">
+        <a href="${href}">
           <img src="${app.image}" alt="${app.name}" onerror="this.src='default-icon.png'">
           <h3>${app.name}</h3>
         </a>
