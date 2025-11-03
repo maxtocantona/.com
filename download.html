@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Download App</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    font-family: sans-serif;
+    background: #f0f2f5;
+    padding: 30px;
+    text-align: center;
+    margin:0;
+  }
+  h2 {
+    margin: 10px 0;
+  }
+  p {
+    color: #333;
+    margin: 10px auto;
+    max-width: 320px;
+  }
+  .button {
+    padding: 12px 25px;
+    background: green;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 16px;
+    margin-top: 20px;
+    display: inline-block;
+  }
+  #dlcount {
+    margin-top: 10px;
+    color: #444;
+    font-weight: bold;
+  }
+  .photo-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 10px;
+  }
+  .photo-grid img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    margin: 5px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .photo-grid img:hover {
+    transform: scale(1.05);
+  }
+
+  /* Fullscreen overlay */
+  #overlay {
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background: rgba(0,0,0,0.9);
+    display:none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    flex-direction: column;
+  }
+  #overlay img {
+    max-width: 95%;
+    max-height: 80%;
+    border-radius: 8px;
+    object-fit: contain;
+  }
+  #overlay .close-btn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: white;
+    color: black;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  #overlay .nav-btn {
+    position: absolute;
+    top:50%;
+    transform: translateY(-50%);
+    font-size: 40px;
+    color: white;
+    cursor: pointer;
+    user-select: none;
+    padding: 10px;
+  }
+  #overlay .prev { left: 10px; }
+  #overlay .next { right: 10px; }
+</style>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyC3TawidTEkY318dTUXX4WDkZTMWiSQ24Y",
+  authDomain: "storage-b0f0c.firebaseapp.com",
+  databaseURL: "https://storage-b0f0c-default-rtdb.firebaseio.com",
+  projectId: "storage-b0f0c",
+  storageBucket: "storage-b0f0c.appspot.com",
+  messagingSenderId: "240490334618",
+  appId: "1:240490334618:web:73f77de6ff9ab18e339223"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+function formatCount(count){
+  if(count >= 1_000_000_000) return Math.floor(count/1_000_000_000)+"B+";
+  if(count >= 1_000_000) return Math.floor(count/1_000_000)+"M+";
+  if(count >= 1_000) return Math.floor(count/1_000)+"K+";
+  return count.toString();
+}
+function fromHex(hex){
+  try { return hex.match(/.{1,2}/g).map(b=>String.fromCharCode(parseInt(b,16))).join(''); } 
+  catch(e){ return ""; }
+}
+
+// Get URL params
+const params = new URLSearchParams(location.search);
+const appFile = params.get("app");
+const iconURL = params.get("png") || "default-icon.png";
+const descriptionHex = params.get("des") || "";
+const appId = params.get("appId") || "unknown";
+const photosParam = params.get("photos") || "[]";
+
+const description = fromHex(descriptionHex);
+let photos = [];
+try { photos = JSON.parse(decodeURIComponent(photosParam)); } catch(e){ photos = []; }
+
+const countRef = ref(db, `downloads/${appId}`);
+
+if(appFile && appFile.endsWith(".apk")){
+  const appName = appFile.replace(".apk","").replaceAll("_"," ").replace(/\b\w/g,l=>l.toUpperCase());
+
+  let photosHTML = '';
+  if(photos.length>0){
+    photosHTML = `<div class="photo-grid">` + photos.map((p,i)=>`<img src="${p}" data-index="${i}" onerror="this.src='default-icon.png'">`).join('') + `</div>`;
+  }
+
+  document.body.innerHTML = `
+    <div id="content">
+      <img src="${iconURL}" style="width:96px;height:96px;border-radius:16px;margin-bottom:10px;" onerror="this.src='default-icon.png'">
+      <h2>${appName}</h2>
+      <p>${description}</p>
+      ${photosHTML}
+      <a class="button" id="downloadBtn">Download APK</a>
+      <div id="dlcount">Downloads: Loading...</div>
+    </div>
+
+    <div id="overlay">
+      <span class="nav-btn prev">&#10094;</span>
+      <img id="overlay-img">
+      <span class="nav-btn next">&#10095;</span>
+      <div class="close-btn">Close</div>
+    </div>
+  `;
+
+  const btn = document.getElementById("downloadBtn");
+  const countText = document.getElementById("dlcount");
+
+  onValue(countRef, snapshot=>{
+    const count = snapshot.val()||0;
+    countText.innerText = "Downloads: "+formatCount(count);
+  });
+
+  btn.addEventListener("click", ()=>{
+    const downloadedApps = JSON.parse(localStorage.getItem("downloadedApps")||"[]");
+    if(!downloadedApps.includes(appId)){
+      runTransaction(countRef,current=>(current||0)+1);
+      downloadedApps.push(appId);
+      localStorage.setItem("downloadedApps",JSON.stringify(downloadedApps));
+    }
+    btn.setAttribute("href",appFile);
+    btn.setAttribute("download","");
+  });
+
+  // Gallery logic
+  const overlay = document.getElementById("overlay");
+  const overlayImg = document.getElementById("overlay-img");
+  const imgs = document.querySelectorAll(".photo-grid img");
+  let currentIndex = 0;
+
+  function showOverlay(index){
+    currentIndex = index;
+    overlayImg.src = photos[index];
+    overlay.style.display = "flex";
+  }
+
+  imgs.forEach(img=>{
+    img.addEventListener("click",()=>showOverlay(parseInt(img.dataset.index)));
+  });
+
+  document.querySelector("#overlay .close-btn").addEventListener("click",()=>{
+    overlay.style.display = "none";
+  });
+
+  document.querySelector("#overlay .prev").addEventListener("click",()=>{
+    currentIndex = (currentIndex-1+photos.length)%photos.length;
+    overlayImg.src = photos[currentIndex];
+  });
+
+  document.querySelector("#overlay .next").addEventListener("click",()=>{
+    currentIndex = (currentIndex+1)%photos.length;
+    overlayImg.src = photos[currentIndex];
+  });
+
+} else {
+  document.body.innerHTML = "<div id='content'><p>App not found.</p></div>";
+}
+</script>
+</body>
+</html>

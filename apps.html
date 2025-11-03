@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>Available Apps</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <style>
@@ -90,9 +90,16 @@ function toHex(str){
   return [...str].map(c=>c.charCodeAt(0).toString(16)).join('');
 }
 
-// Apps array
+// Apps array with multiple photos
 const apps = [
-  { id:"Contact Creater", name:"Contact Creator", apk:"Contact generator.apk", description:"With this app you can make many friends and meet many people.", image:"Contact gr.png" }
+  {
+    id:"EfutCards",
+    name:"EfutCards",
+    apk:"efutcards.apk",
+    description:"With this app you can create high-quality efootball-like cards.",
+    image:"efut.pmg",
+    photos:["efut1.png","efut2.png","efut3.png"]
+  }
 ];
 
 const container = document.getElementById("app-list");
@@ -101,7 +108,7 @@ let focusedAppId = urlParams.get('focus') || null;
 
 apps.forEach(app=>{
   const hexDes = toHex(app.description);
-  const href = `dawnload.html?app=${encodeURIComponent(app.apk)}&png=${encodeURIComponent(app.image)}&des=${hexDes}&appId=${app.id}`;
+  const href = `download.html?app=${encodeURIComponent(app.apk)}&png=${encodeURIComponent(app.image)}&des=${hexDes}&appId=${app.id}&photos=${encodeURIComponent(JSON.stringify(app.photos))}`;
 
   const div = document.createElement("div");
   div.className = "app-card";
@@ -126,7 +133,7 @@ apps.forEach(app=>{
   div.querySelector(".app-content").addEventListener("click", e=>{
     e.preventDefault();
     if(focusedAppId === app.id){
-      // Already focused → open download
+      // Already focused → open download page
       window.location.href = href;
     } else {
       // Focus change
