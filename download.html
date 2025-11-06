@@ -131,6 +131,7 @@ const iconURL = params.get("png") || "default-icon.png";
 const descriptionHex = params.get("des") || "";
 const appId = params.get("appId") || "unknown";
 const photosParam = params.get("photos") || "[]";
+  document.title += " | " + appFile;
 
 const description = fromHex(descriptionHex);
 let photos = [];
