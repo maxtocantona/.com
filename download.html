@@ -5,7 +5,7 @@
 <title>Download App</title>
   <link rel="icon" type="image/png" href="logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="With this app you can create high-quality efootball-like cards."/> 
+  <meta name="description" content="maxtocantona apps"/> 
 <style>
   body {
     font-family: sans-serif;
@@ -75,6 +75,7 @@
     object-fit: contain;
   }
   #overlay .close-btn {
+    animation: unoGlow 2s infinite alternate;
     margin-top: 20px;
     padding: 10px 20px;
     background: white;
@@ -94,6 +95,11 @@
   }
   #overlay .prev { left: 10px; }
   #overlay .next { right: 10px; }
+  @keyframes unoGlow {
+  0%   { box-shadow: 0 0 15px 3px #11ff66; }
+  50%  { box-shadow: 0 0 35px 15px #2575fc; }
+  100% { box-shadow: 0 0 50px 25px #ff00ff; }
+}
 </style>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
